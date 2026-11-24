@@ -102,8 +102,14 @@ create table if not exists public.daily_todos (
   sort_order int default 0,
   estimated_minutes int default null,
   scheduled_slot text default null,
+  category text default 'strategy',
   created_at timestamptz default now()
 );
+
+-- Migration safeguard if table already existed
+alter table public.daily_todos add column if not exists category text default 'strategy';
+alter table public.daily_todos add column if not exists estimated_minutes int default null;
+alter table public.daily_todos add column if not exists scheduled_slot text default null;
 
 alter table public.daily_todos enable row level security;
 
@@ -256,9 +262,13 @@ create table if not exists public.promotion_plans (
   user_id uuid not null references auth.users(id) on delete cascade,
   title text default 'Q4 Business Promotion Plan',
   objective text default '',
+  linked_goal_id uuid,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- Migration safeguard if table already existed
+alter table public.promotion_plans add column if not exists linked_goal_id uuid;
 
 alter table public.promotion_plans enable row level security;
 
