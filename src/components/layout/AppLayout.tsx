@@ -36,7 +36,7 @@ export const AppLayout: React.FC = () => {
           sidebarCollapsed={sidebarCollapsed}
           onOpenQuickCapture={() => setQuickCaptureOpen(true)}
         />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1200px] mx-auto w-full">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 max-w-[1200px] mx-auto w-full">
           <Outlet />
         </main>
       </div>

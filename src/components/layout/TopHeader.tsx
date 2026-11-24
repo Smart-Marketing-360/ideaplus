@@ -20,7 +20,13 @@ import {
   Sparkles,
   ChevronRight,
   SlidersHorizontal,
-  CheckCheck
+  CheckCheck,
+  LayoutDashboard,
+  CalendarRange,
+  Target,
+  Megaphone,
+  Briefcase,
+  ShieldCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAutosave } from '../../context/AutosaveContext';
@@ -166,6 +172,21 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
     return 'Diary';
   };
 
+  // Determine current page icon
+  const getPageIcon = () => {
+    const path = location.pathname;
+    if (path === '/') return LayoutDashboard;
+    if (path.startsWith('/daily')) return CalendarDays;
+    if (path.startsWith('/monthly')) return CalendarRange;
+    if (path.startsWith('/goals')) return Target;
+    if (path.startsWith('/smart-goals')) return Sparkles;
+    if (path.startsWith('/promotion')) return Megaphone;
+    if (path.startsWith('/management')) return Briefcase;
+    if (path.startsWith('/settings')) return Settings;
+    if (path.startsWith('/admin')) return ShieldCheck;
+    return LayoutDashboard;
+  };
+
   const isDashboard = location.pathname === '/';
 
   const handlePrint = () => {
@@ -182,8 +203,8 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
 
   return (
     <header className="no-print h-14 bg-white/95 backdrop-blur-sm border-b border-diary-navy/15 px-3 sm:px-4 md:px-6 sticky top-0 z-30 flex items-center justify-between gap-2">
-      {/* LEFT: Page title in sentence case */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+      {/* LEFT: Page Icon with Save Status Badge (Tick for Saved, ! for Unsaved) + Title */}
+      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
         {onToggleSidebar && (
           <button
             type="button"
@@ -195,34 +216,71 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
             <Menu className="w-4 h-4" />
           </button>
         )}
-        <h1 className="font-heading text-base sm:text-section-title text-diary-navy font-semibold tracking-normal truncate">
+
+        {/* Dashboard / Page Icon with Tick for saved or ! for unsaved */}
+        <div
+          className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-diary-cream-light border border-diary-navy/15 text-diary-navy shrink-0 shadow-2xs"
+          title={
+            status === 'saving'
+              ? 'Saving changes...'
+              : status === 'saved'
+              ? 'All changes saved (✓)'
+              : 'Unsaved changes / offline (!)'
+          }
+        >
+          {React.createElement(getPageIcon(), { className: 'w-4 h-4 text-diary-navy' })}
+
+          {/* Status Badge: Tick for saved, ! mark for unsaved, spinner for saving */}
+          <span
+            className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold shadow-xs border-2 border-white transition-all ${
+              status === 'saving'
+                ? 'bg-amber-500 text-white'
+                : status === 'saved'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-amber-500 text-white'
+            }`}
+            aria-label={status === 'saved' ? 'Saved' : status === 'saving' ? 'Saving' : 'Unsaved'}
+          >
+            {status === 'saving' ? (
+              <RefreshCw className="w-2.5 h-2.5 text-white animate-spin" />
+            ) : status === 'saved' ? (
+              <Check className="w-2.5 h-2.5 text-white stroke-[3.5]" />
+            ) : (
+              <span className="leading-none text-[10px] font-black">!</span>
+            )}
+          </span>
+        </div>
+
+        {/* Page Title */}
+        <h1 className="font-heading text-sm sm:text-base md:text-section-title text-diary-navy font-bold tracking-normal truncate">
           {getPageTitle()}
         </h1>
-      </div>
 
-      {/* RIGHT: Saved indicator, search, notifications, primary action, more "⋯", user menu */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-        {/* Saved Status Indicator */}
-        <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-tag bg-diary-cream-light border border-diary-navy/20 text-diary-navy shrink-0">
+        {/* Desktop/Tablet textual pill indicator */}
+        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] bg-diary-cream-light border border-diary-navy/15 text-diary-navy shrink-0">
           {status === 'saving' && (
             <>
-              <RefreshCw className="w-3.5 h-3.5 animate-spin text-diary-gold-dark" />
-              <span className="hidden sm:inline text-diary-navy font-medium">Saving...</span>
+              <RefreshCw className="w-3 h-3 animate-spin text-amber-600" />
+              <span className="text-amber-700 font-medium">Saving...</span>
             </>
           )}
           {status === 'saved' && (
             <>
-              <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-              <span className="text-emerald-700 font-semibold text-xs sm:text-tag">Saved</span>
+              <Check className="w-3 h-3 text-emerald-600 stroke-[2.5]" />
+              <span className="text-emerald-700 font-medium">Saved</span>
             </>
           )}
           {status === 'offline_queued' && (
             <>
-              <WifiOff className="w-3.5 h-3.5 text-amber-600" />
-              <span className="hidden sm:inline text-amber-700 font-medium">Offline</span>
+              <WifiOff className="w-3 h-3 text-amber-600" />
+              <span className="text-amber-700 font-medium">Offline</span>
             </>
           )}
         </div>
+      </div>
+
+      {/* RIGHT: Quick capture, search, notifications, primary action (Today/Print), more "⋯", user menu */}
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
 
         {/* Global Quick Capture Button (Cmd/Ctrl + K) */}
         {onOpenQuickCapture && (
@@ -473,26 +531,28 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
           )}
         </div>
 
-        {/* Primary Action Button: "Open today's page" on Dashboard, "Print / PDF" elsewhere */}
+        {/* Primary Action Button: "Today" on Dashboard, "Print" elsewhere */}
         {isDashboard ? (
           <button
             type="button"
             onClick={() => navigate('/daily')}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg text-xs sm:text-body-medium font-semibold transition-colors shadow-xs active:scale-95 min-h-[36px] shrink-0"
+            className="inline-flex items-center justify-center p-2 sm:px-3 sm:py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg text-xs sm:text-body-medium font-semibold transition-colors shadow-xs active:scale-95 min-w-[36px] min-h-[36px] shrink-0"
+            title="Open today's daily planner page"
+            aria-label="Open today's planner"
           >
-            <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-diary-gold" />
-            <span className="hidden sm:inline">Open today's page</span>
-            <span className="sm:hidden">Today</span>
+            <CalendarDays className="w-4 h-4 text-diary-gold" />
+            <span className="hidden sm:inline ml-1.5">Today</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg text-xs sm:text-body-medium font-semibold transition-colors shadow-xs active:scale-95 min-h-[36px] shrink-0"
+            className="inline-flex items-center justify-center p-2 sm:px-3 sm:py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg text-xs sm:text-body-medium font-semibold transition-colors shadow-xs active:scale-95 min-w-[36px] min-h-[36px] shrink-0"
+            title="Print / Save as PDF"
+            aria-label="Print diary page"
           >
-            <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-diary-gold" />
-            <span className="hidden sm:inline">Print / PDF</span>
-            <span className="sm:hidden">PDF</span>
+            <Printer className="w-4 h-4 text-diary-gold" />
+            <span className="hidden sm:inline ml-1.5">Print</span>
           </button>
         )}
 

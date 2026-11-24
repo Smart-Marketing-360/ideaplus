@@ -279,7 +279,7 @@ export const PromotionPlansPage: React.FC = () => {
 
               {/* PROMOTION ACTION REGISTER TABLE */}
               <div className="diary-card p-4 md:p-6 space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-diary-navy/10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-diary-navy/10">
                   <div className="flex items-center gap-2">
                     <h2 className="font-heading text-card-title text-diary-navy font-semibold">
                       Action register
@@ -289,11 +289,11 @@ export const PromotionPlansPage: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 text-caption">
-                    <span className="flex items-center gap-1 text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  <div className="flex flex-wrap items-center gap-2 text-caption">
+                    <span className="flex items-center gap-1 text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[11px] sm:text-caption">
                       <Clock className="w-3.5 h-3.5 text-amber-600" /> Due in ≤3 days
                     </span>
-                    <span className="flex items-center gap-1 text-red-800 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                    <span className="flex items-center gap-1 text-red-800 bg-red-50 px-2 py-0.5 rounded border border-red-200 text-[11px] sm:text-caption">
                       <AlertTriangle className="w-3.5 h-3.5 text-red-600" /> Overdue
                     </span>
                   </div>
