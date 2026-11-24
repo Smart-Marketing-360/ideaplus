@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Profile } from '../types/database';
 import { getProfile, updateProfile } from '../lib/dataService';
+import { brandConfig } from '../config/brand.config';
 
 export interface UserSession {
   id: string;
@@ -60,18 +61,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(true);
       try {
         if (isSupabaseConfigured && supabase) {
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+          const session = data?.session;
           if (session?.user) {
             setUser({
               id: session.user.id,
               email: session.user.email || '',
               name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User'
             });
-            const p = await getProfile(session.user.id);
-            setProfile(p);
+            try {
+              const p = await getProfile(session.user.id);
+              setProfile(p);
+            } catch (err) {
+              console.warn('Could not fetch cloud profile, falling back', err);
+            }
           } else {
             // Restore demo session if saved
-            restoreLocalUser();
+            await restoreLocalUser();
           }
 
           // Listen for auth changes
@@ -82,18 +88,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email: session.user.email || '',
                 name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User'
               });
-              const p = await getProfile(session.user.id);
-              setProfile(p);
+              try {
+                const p = await getProfile(session.user.id);
+                setProfile(p);
+              } catch (err) {
+                console.warn('Could not fetch cloud profile on state change', err);
+              }
             } else {
-              restoreLocalUser();
+              await restoreLocalUser();
             }
           });
         } else {
-          restoreLocalUser();
+          await restoreLocalUser();
         }
       } catch (err) {
         console.error('Auth initialization error:', err);
-        restoreLocalUser();
+        await restoreLocalUser();
       } finally {
         setIsLoading(false);
       }
@@ -108,8 +118,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const parsed = JSON.parse(saved);
         setUser(parsed);
-        const p = await getProfile(parsed.id);
-        setProfile(p);
+        try {
+          const p = await getProfile(parsed.id);
+          setProfile(p);
+        } catch (e) {
+          console.warn('Could not load profile from cloud, using cached defaults', e);
+        }
         return;
       } catch (e) {
         console.error(e);
@@ -203,23 +217,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const switchDemoUser = async (userIndex: 1 | 2 | 3) => {
     setIsLoading(true);
-    const demo = DEMO_USERS[userIndex];
-    const sessionUser: UserSession = {
-      id: demo.id,
-      email: demo.email,
-      name: demo.name,
-    };
-    setUser(sessionUser);
-    localStorage.setItem('bizdiary_current_user', JSON.stringify(sessionUser));
+    try {
+      const demo = DEMO_USERS[userIndex];
+      const sessionUser: UserSession = {
+        id: demo.id,
+        email: demo.email,
+        name: demo.name,
+      };
+      setUser(sessionUser);
+      localStorage.setItem('bizdiary_current_user', JSON.stringify(sessionUser));
 
-    // Ensure profile has matching name & admin flag
-    const p = await updateProfile(demo.id, {
-      name: demo.name,
-      business_name: demo.business_name,
-      is_admin: demo.is_admin,
-    });
-    setProfile(p);
-    setIsLoading(false);
+      try {
+        // Ensure profile has matching name & admin flag
+        const p = await updateProfile(demo.id, {
+          name: demo.name,
+          business_name: demo.business_name,
+          is_admin: demo.is_admin,
+        });
+        setProfile(p);
+      } catch (err) {
+        console.warn('Could not sync demo user profile to database:', err);
+        setProfile({
+          id: demo.id,
+          name: demo.name,
+          business_name: demo.business_name,
+          is_admin: demo.is_admin,
+          daily_checks_labels: [...brandConfig.defaults.dailyCheckLabels],
+          time_audit_labels: [...brandConfig.defaults.timeAuditSlotLabels],
+          timezone: 'Asia/Kolkata'
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const refreshProfile = async () => {

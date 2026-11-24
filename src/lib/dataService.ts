@@ -99,13 +99,17 @@ export async function getProfile(userId: string): Promise<Profile> {
 
 export async function updateProfile(userId: string, updates: Partial<Profile>): Promise<Profile> {
   if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .upsert({ id: userId, ...updates, updated_at: new Date().toISOString() })
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert({ id: userId, ...updates, updated_at: new Date().toISOString() })
+        .select()
+        .single();
+      if (error) throw error;
+      if (data) return data;
+    } catch (err) {
+      console.warn('Supabase updateProfile error, using local fallback:', err);
+    }
   }
 
   const profiles = getLocal<Record<string, Profile>>('profiles', {});
@@ -125,73 +129,77 @@ export async function getDailyPage(userId: string, date: string): Promise<{
   schedule: DailySchedule[];
 }> {
   if (isSupabaseConfigured && supabase) {
-    // 1. Fetch or initialize Daily Page
-    let { data: page, error } = await supabase
-      .from('daily_pages')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('date', date)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    if (!page) {
-      const { data: newPage, error: createError } = await supabase
+    try {
+      // 1. Fetch or initialize Daily Page
+      let { data: page, error } = await supabase
         .from('daily_pages')
-        .insert({
-          user_id: userId,
-          date,
-          priorities: ['', '', '', '', ''],
-          check1: false,
-          check2: false,
-          check3: false,
-          check4: false,
-          goal_for_day: ''
-        })
-        .select()
-        .single();
-      if (createError) throw createError;
-      page = newPage;
-    }
+        .select('*')
+        .eq('user_id', userId)
+        .eq('date', date)
+        .maybeSingle();
 
-    // 2. Fetch Todos
-    const { data: todos, error: todoErr } = await supabase
-      .from('daily_todos')
-      .select('*')
-      .eq('daily_page_id', page.id)
-      .order('sort_order', { ascending: true });
-    if (todoErr) throw todoErr;
+      if (error) throw error;
 
-    // 3. Fetch Schedule
-    let { data: schedule, error: schedErr } = await supabase
-      .from('daily_schedule')
-      .select('*')
-      .eq('daily_page_id', page.id)
-      .order('created_at', { ascending: true });
-    if (schedErr) throw schedErr;
-
-    // If schedule rows don't exist yet, seed the default slots
-    if (!schedule || schedule.length === 0) {
-      const defaultSlots = DEFAULT_TIME_SLOTS.map((slot) => ({
-        daily_page_id: page.id,
-        user_id: userId,
-        time_slot: slot,
-        activity: ''
-      }));
-      const { data: createdSched, error: schedSeedErr } = await supabase
-        .from('daily_schedule')
-        .insert(defaultSlots)
-        .select();
-      if (!schedSeedErr && createdSched) {
-        schedule = createdSched;
+      if (!page) {
+        const { data: newPage, error: createError } = await supabase
+          .from('daily_pages')
+          .insert({
+            user_id: userId,
+            date,
+            priorities: ['', '', '', '', ''],
+            check1: false,
+            check2: false,
+            check3: false,
+            check4: false,
+            goal_for_day: ''
+          })
+          .select()
+          .single();
+        if (createError) throw createError;
+        page = newPage;
       }
-    }
 
-    return {
-      page,
-      todos: todos || [],
-      schedule: schedule || []
-    };
+      // 2. Fetch Todos
+      const { data: todos, error: todoErr } = await supabase
+        .from('daily_todos')
+        .select('*')
+        .eq('daily_page_id', page.id)
+        .order('sort_order', { ascending: true });
+      if (todoErr) throw todoErr;
+
+      // 3. Fetch Schedule
+      let { data: schedule, error: schedErr } = await supabase
+        .from('daily_schedule')
+        .select('*')
+        .eq('daily_page_id', page.id)
+        .order('created_at', { ascending: true });
+      if (schedErr) throw schedErr;
+
+      // If schedule rows don't exist yet, seed the default slots
+      if (!schedule || schedule.length === 0) {
+        const defaultSlots = DEFAULT_TIME_SLOTS.map((slot) => ({
+          daily_page_id: page.id,
+          user_id: userId,
+          time_slot: slot,
+          activity: ''
+        }));
+        const { data: createdSched, error: schedSeedErr } = await supabase
+          .from('daily_schedule')
+          .insert(defaultSlots)
+          .select();
+        if (!schedSeedErr && createdSched) {
+          schedule = createdSched;
+        }
+      }
+
+      return {
+        page,
+        todos: todos || [],
+        schedule: schedule || []
+      };
+    } catch (err) {
+      console.warn('Supabase getDailyPage error, falling back to local storage:', err);
+    }
   }
 
   // Local / Offline partition
@@ -400,41 +408,45 @@ export async function rollTodosIntoDate(
  * ============================================================================== */
 export async function getMonthlyReview(userId: string, year: number, month: number): Promise<MonthlyReview> {
   if (isSupabaseConfigured && supabase) {
-    let { data, error } = await supabase
-      .from('monthly_reviews')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('year', year)
-      .eq('month', month)
-      .maybeSingle();
+    try {
+      let { data, error } = await supabase
+        .from('monthly_reviews')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('year', year)
+        .eq('month', month)
+        .maybeSingle();
 
-    if (error) throw error;
-    if (data) return data;
+      if (error) throw error;
+      if (data) return data;
 
-    // Create record
-    const { data: newReview, error: createError } = await supabase
-      .from('monthly_reviews')
-      .insert({
-        user_id: userId,
-        year,
-        month,
-        time_audit: {},
-        hours_goal_planning: 0,
-        hours_implementation: 0,
-        hours_review: 0,
-        hours_innovation: 0,
-        hours_solution: 0,
-        notes: {},
-        results: '',
-        salary_for_results: 0,
-        progress_this_month: '',
-        progress_last_month: '',
-        next_month_goal: ''
-      })
-      .select()
-      .single();
-    if (createError) throw createError;
-    return newReview;
+      // Create record
+      const { data: newReview, error: createError } = await supabase
+        .from('monthly_reviews')
+        .insert({
+          user_id: userId,
+          year,
+          month,
+          time_audit: {},
+          hours_goal_planning: 0,
+          hours_implementation: 0,
+          hours_review: 0,
+          hours_innovation: 0,
+          hours_solution: 0,
+          notes: {},
+          results: '',
+          salary_for_results: 0,
+          progress_this_month: '',
+          progress_last_month: '',
+          next_month_goal: ''
+        })
+        .select()
+        .single();
+      if (createError) throw createError;
+      return newReview;
+    } catch (err) {
+      console.warn('Supabase getMonthlyReview error, using local fallback:', err);
+    }
   }
 
   const key = `monthly_${userId}`;
@@ -551,13 +563,17 @@ export async function saveMonthlyReview(userId: string, review: MonthlyReview): 
  * ============================================================================== */
 export async function getGoals(userId: string): Promise<Goal[]> {
   if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase
-      .from('goals')
-      .select('*')
-      .eq('user_id', userId)
-      .order('sort_order', { ascending: true });
-    if (error) throw error;
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', userId)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.warn('Supabase getGoals error, using local fallback:', err);
+    }
   }
 
   const key = `goals_${userId}`;
@@ -665,46 +681,50 @@ export async function getSmartGoals(userId: string): Promise<{
   milestones: Record<string, SmartGoalMilestone[]>;
 }> {
   if (isSupabaseConfigured && supabase) {
-    const { data: goals, error } = await supabase
-      .from('smart_goals')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-
-    const stepsMap: Record<string, SmartGoalStep[]> = {};
-    const milesMap: Record<string, SmartGoalMilestone[]> = {};
-
-    if (goals && goals.length > 0) {
-      const goalIds = goals.map((g) => g.id);
-      const { data: allSteps } = await supabase
-        .from('smart_goal_steps')
+    try {
+      const { data: goals, error } = await supabase
+        .from('smart_goals')
         .select('*')
-        .in('smart_goal_id', goalIds)
-        .order('sort_order', { ascending: true });
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
 
-      const { data: allMiles } = await supabase
-        .from('smart_goal_milestones')
-        .select('*')
-        .in('smart_goal_id', goalIds)
-        .order('date', { ascending: true });
+      const stepsMap: Record<string, SmartGoalStep[]> = {};
+      const milesMap: Record<string, SmartGoalMilestone[]> = {};
 
-      (allSteps || []).forEach((s) => {
-        if (!stepsMap[s.smart_goal_id]) stepsMap[s.smart_goal_id] = [];
-        stepsMap[s.smart_goal_id].push(s);
-      });
+      if (goals && goals.length > 0) {
+        const goalIds = goals.map((g) => g.id);
+        const { data: allSteps } = await supabase
+          .from('smart_goal_steps')
+          .select('*')
+          .in('smart_goal_id', goalIds)
+          .order('sort_order', { ascending: true });
 
-      (allMiles || []).forEach((m) => {
-        if (!milesMap[m.smart_goal_id]) milesMap[m.smart_goal_id] = [];
-        milesMap[m.smart_goal_id].push(m);
-      });
+        const { data: allMiles } = await supabase
+          .from('smart_goal_milestones')
+          .select('*')
+          .in('smart_goal_id', goalIds)
+          .order('date', { ascending: true });
+
+        (allSteps || []).forEach((s) => {
+          if (!stepsMap[s.smart_goal_id]) stepsMap[s.smart_goal_id] = [];
+          stepsMap[s.smart_goal_id].push(s);
+        });
+
+        (allMiles || []).forEach((m) => {
+          if (!milesMap[m.smart_goal_id]) milesMap[m.smart_goal_id] = [];
+          milesMap[m.smart_goal_id].push(m);
+        });
+      }
+
+      return {
+        smartGoals: goals || [],
+        steps: stepsMap,
+        milestones: milesMap
+      };
+    } catch (err) {
+      console.warn('Supabase getSmartGoals error, using local fallback:', err);
     }
-
-    return {
-      smartGoals: goals || [],
-      steps: stepsMap,
-      milestones: milesMap
-    };
   }
 
   // Local / Offline demo
@@ -819,29 +839,33 @@ export async function getPromotionPlans(userId: string): Promise<{
   items: Record<string, PromotionPlanItem[]>;
 }> {
   if (isSupabaseConfigured && supabase) {
-    const { data: plans, error } = await supabase
-      .from('promotion_plans')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-
-    const itemsMap: Record<string, PromotionPlanItem[]> = {};
-    if (plans && plans.length > 0) {
-      const planIds = plans.map((p) => p.id);
-      const { data: allItems } = await supabase
-        .from('promotion_plan_items')
+    try {
+      const { data: plans, error } = await supabase
+        .from('promotion_plans')
         .select('*')
-        .in('plan_id', planIds)
-        .order('sl_no', { ascending: true });
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
 
-      (allItems || []).forEach((item) => {
-        if (!itemsMap[item.plan_id]) itemsMap[item.plan_id] = [];
-        itemsMap[item.plan_id].push(item);
-      });
+      const itemsMap: Record<string, PromotionPlanItem[]> = {};
+      if (plans && plans.length > 0) {
+        const planIds = plans.map((p) => p.id);
+        const { data: allItems } = await supabase
+          .from('promotion_plan_items')
+          .select('*')
+          .in('plan_id', planIds)
+          .order('sl_no', { ascending: true });
+
+        (allItems || []).forEach((item) => {
+          if (!itemsMap[item.plan_id]) itemsMap[item.plan_id] = [];
+          itemsMap[item.plan_id].push(item);
+        });
+      }
+
+      return { plans: plans || [], items: itemsMap };
+    } catch (err) {
+      console.warn('Supabase getPromotionPlans error, using local fallback:', err);
     }
-
-    return { plans: plans || [], items: itemsMap };
   }
 
   // Local / Offline demo
@@ -922,14 +946,18 @@ export async function savePromotionPlanItems(userId: string, planId: string, ite
  * ============================================================================== */
 export async function getManagementItems(userId: string, type: ManagementType): Promise<ManagementItem[]> {
   if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase
-      .from('management_items')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('type', type)
-      .order('sort_order', { ascending: true });
-    if (error) throw error;
-    return data || [];
+    try {
+      const { data, error } = await supabase
+        .from('management_items')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('type', type)
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.warn(`Supabase getManagementItems (${type}) error, using local fallback:`, err);
+    }
   }
 
   const key = `mgmt_${userId}_${type}`;

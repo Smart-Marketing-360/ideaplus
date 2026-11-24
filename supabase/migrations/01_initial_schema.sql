@@ -334,3 +334,15 @@ create index if not exists idx_smart_goal_milestones_goal on public.smart_goal_m
 create index if not exists idx_promotion_plans_user on public.promotion_plans(user_id);
 create index if not exists idx_promotion_plan_items_plan on public.promotion_plan_items(plan_id);
 create index if not exists idx_management_items_user_type on public.management_items(user_id, type);
+
+-- ------------------------------------------------------------------------------
+-- 9. SCHEMA GRANTS FOR SUPABASE CLIENT (ANON & AUTHENTICATED)
+-- ------------------------------------------------------------------------------
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+grant all on all routines in schema public to anon, authenticated, service_role;
+
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public grant all on routines to anon, authenticated, service_role;
