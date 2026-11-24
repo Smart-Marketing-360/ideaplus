@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Profile } from '../types/database';
-import { getProfile, updateProfile } from '../lib/dataService';
+import { getProfile, updateProfile, setActiveSupabaseUserId } from '../lib/dataService';
 import { brandConfig } from '../config/brand.config';
 
 export interface UserSession {
@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
           const session = data?.session;
           if (session?.user) {
+            setActiveSupabaseUserId(session.user.id);
             setUser({
               id: session.user.id,
               email: session.user.email || '',
@@ -76,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               console.warn('Could not fetch cloud profile, falling back', err);
             }
           } else {
+            setActiveSupabaseUserId(null);
             // Restore demo session if saved
             await restoreLocalUser();
           }
@@ -83,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Listen for auth changes
           supabase.auth.onAuthStateChange(async (_event, session) => {
             if (session?.user) {
+              setActiveSupabaseUserId(session.user.id);
               setUser({
                 id: session.user.id,
                 email: session.user.email || '',
@@ -95,10 +98,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.warn('Could not fetch cloud profile on state change', err);
               }
             } else {
+              setActiveSupabaseUserId(null);
               await restoreLocalUser();
             }
           });
         } else {
+          setActiveSupabaseUserId(null);
           await restoreLocalUser();
         }
       } catch (err) {
@@ -113,6 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const restoreLocalUser = async () => {
+    setActiveSupabaseUserId(null);
     const saved = localStorage.getItem('bizdiary_current_user');
     if (saved) {
       try {
@@ -140,6 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
         if (error) throw error;
         if (data.user) {
+          setActiveSupabaseUserId(data.user.id);
           const u: UserSession = {
             id: data.user.id,
             email: data.user.email || email,
@@ -150,6 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setProfile(p);
         }
       } else {
+        setActiveSupabaseUserId(null);
         // Offline / custom email login
         const id = 'user-' + btoa(email).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
         const u: UserSession = { id, email, name: email.split('@')[0] };
@@ -176,12 +184,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         if (error) throw error;
         if (data.user) {
+          setActiveSupabaseUserId(data.user.id);
           const u: UserSession = { id: data.user.id, email: data.user.email || email, name };
           setUser(u);
           const p = await updateProfile(data.user.id, { name, business_name: businessName });
           setProfile(p);
         }
       } else {
+        setActiveSupabaseUserId(null);
         const id = 'user-' + btoa(email).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16);
         const u: UserSession = { id, email, name };
         setUser(u);
@@ -207,8 +217,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    setActiveSupabaseUserId(null);
     if (isSupabaseConfigured && supabase) {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut().catch(() => {});
     }
     localStorage.removeItem('bizdiary_current_user');
     setUser(null);
@@ -216,6 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchDemoUser = async (userIndex: 1 | 2 | 3) => {
+    setActiveSupabaseUserId(null);
     setIsLoading(true);
     try {
       const demo = DEMO_USERS[userIndex];

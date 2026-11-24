@@ -23,6 +23,40 @@ export const DEFAULT_TIME_SLOTS = [
   '6 PM', '7 PM', '8 PM', '9 PM'
 ];
 
+/**
+ * Checks whether Supabase cloud storage should be queried for a given user.
+ * Only engages Supabase when there is an active authenticated Supabase session
+ * matching this userId. Demo/mock users (e.g. 11111111-...) are kept purely in
+ * local storage so they never trigger 401 / 42501 RLS policy violations.
+ */
+let currentSupabaseUserId: string | null = null;
+
+export const setActiveSupabaseUserId = (userId: string | null): void => {
+  currentSupabaseUserId = userId;
+};
+
+export const getActiveSupabaseUserId = (): string | null => {
+  return currentSupabaseUserId;
+};
+
+export const isSupabaseActiveForUser = (userId?: string): boolean => {
+  if (!isSupabaseConfigured || !supabase || !userId) return false;
+  if (
+    userId.startsWith('11111111-') ||
+    userId.startsWith('22222222-') ||
+    userId.startsWith('33333333-') ||
+    userId.startsWith('user-') ||
+    userId === 'demo'
+  ) {
+    return false;
+  }
+  // If we know the authenticated Supabase user, require a match
+  if (currentSupabaseUserId) {
+    return currentSupabaseUserId === userId;
+  }
+  return false;
+};
+
 // Offline / LocalStorage partitioned helpers
 function getLocal<T>(key: string, defaultValue: T): T {
   try {
@@ -69,14 +103,18 @@ export function getOfflineQueueCount(): number {
  * 1. PROFILES & USER SETTINGS
  * ============================================================================== */
 export async function getProfile(userId: string): Promise<Profile> {
-  if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    if (error && error.code !== 'PGRST116') throw error;
-    if (data) return data;
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      const { data, error } = await supabase!
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      if (data) return data;
+    } catch (err) {
+      console.warn('Supabase getProfile error, using local fallback:', err);
+    }
   }
 
   // Local / Fallback store
@@ -98,9 +136,9 @@ export async function getProfile(userId: string): Promise<Profile> {
 }
 
 export async function updateProfile(userId: string, updates: Partial<Profile>): Promise<Profile> {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseActiveForUser(userId)) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('profiles')
         .upsert({ id: userId, ...updates, updated_at: new Date().toISOString() })
         .select()
@@ -128,10 +166,10 @@ export async function getDailyPage(userId: string, date: string): Promise<{
   todos: DailyTodo[];
   schedule: DailySchedule[];
 }> {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseActiveForUser(userId)) {
     try {
       // 1. Fetch or initialize Daily Page
-      let { data: page, error } = await supabase
+      let { data: page, error } = await supabase!
         .from('daily_pages')
         .select('*')
         .eq('user_id', userId)
@@ -141,7 +179,7 @@ export async function getDailyPage(userId: string, date: string): Promise<{
       if (error) throw error;
 
       if (!page) {
-        const { data: newPage, error: createError } = await supabase
+        const { data: newPage, error: createError } = await supabase!
           .from('daily_pages')
           .insert({
             user_id: userId,
@@ -160,7 +198,7 @@ export async function getDailyPage(userId: string, date: string): Promise<{
       }
 
       // 2. Fetch Todos
-      const { data: todos, error: todoErr } = await supabase
+      const { data: todos, error: todoErr } = await supabase!
         .from('daily_todos')
         .select('*')
         .eq('daily_page_id', page.id)
@@ -168,7 +206,7 @@ export async function getDailyPage(userId: string, date: string): Promise<{
       if (todoErr) throw todoErr;
 
       // 3. Fetch Schedule
-      let { data: schedule, error: schedErr } = await supabase
+      let { data: schedule, error: schedErr } = await supabase!
         .from('daily_schedule')
         .select('*')
         .eq('daily_page_id', page.id)
@@ -183,7 +221,7 @@ export async function getDailyPage(userId: string, date: string): Promise<{
           time_slot: slot,
           activity: ''
         }));
-        const { data: createdSched, error: schedSeedErr } = await supabase
+        const { data: createdSched, error: schedSeedErr } = await supabase!
           .from('daily_schedule')
           .insert(defaultSlots)
           .select();
@@ -261,12 +299,16 @@ export async function getDailyPage(userId: string, date: string): Promise<{
 }
 
 export async function saveDailyPage(userId: string, page: DailyPage): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    const { error } = await supabase
-      .from('daily_pages')
-      .upsert({ ...page, user_id: userId, updated_at: new Date().toISOString() });
-    if (error) throw error;
-    return;
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      const { error } = await supabase!
+        .from('daily_pages')
+        .upsert({ ...page, user_id: userId, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      return;
+    } catch (err) {
+      console.warn('Supabase saveDailyPage error, saving locally:', err);
+    }
   }
 
   const pagesKey = `daily_pages_${userId}`;
@@ -276,22 +318,30 @@ export async function saveDailyPage(userId: string, page: DailyPage): Promise<vo
 }
 
 export async function saveDailyTodos(pageId: string, todos: DailyTodo[]): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    // Delete existing and bulk upsert
-    for (const todo of todos) {
-      await supabase.from('daily_todos').upsert(todo);
+  if (todos.length > 0 && isSupabaseActiveForUser(todos[0]?.user_id)) {
+    try {
+      // Delete existing and bulk upsert
+      for (const todo of todos) {
+        await supabase!.from('daily_todos').upsert(todo);
+      }
+      return;
+    } catch (err) {
+      console.warn('Supabase saveDailyTodos error, saving locally:', err);
     }
-    return;
   }
   setLocal(`daily_todos_${pageId}`, todos);
 }
 
 export async function saveDailySchedule(pageId: string, schedule: DailySchedule[]): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    for (const item of schedule) {
-      await supabase.from('daily_schedule').upsert(item);
+  if (schedule.length > 0 && isSupabaseActiveForUser(schedule[0]?.user_id)) {
+    try {
+      for (const item of schedule) {
+        await supabase!.from('daily_schedule').upsert(item);
+      }
+      return;
+    } catch (err) {
+      console.warn('Supabase saveDailySchedule error, saving locally:', err);
     }
-    return;
   }
   setLocal(`daily_schedule_${pageId}`, schedule);
 }
@@ -407,9 +457,9 @@ export async function rollTodosIntoDate(
  * 3. MONTHLY REVIEW / SELF APPRAISAL (Page 2)
  * ============================================================================== */
 export async function getMonthlyReview(userId: string, year: number, month: number): Promise<MonthlyReview> {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseActiveForUser(userId)) {
     try {
-      let { data, error } = await supabase
+      let { data, error } = await supabase!
         .from('monthly_reviews')
         .select('*')
         .eq('user_id', userId)
@@ -421,7 +471,7 @@ export async function getMonthlyReview(userId: string, year: number, month: numb
       if (data) return data;
 
       // Create record
-      const { data: newReview, error: createError } = await supabase
+      const { data: newReview, error: createError } = await supabase!
         .from('monthly_reviews')
         .insert({
           user_id: userId,
@@ -541,12 +591,16 @@ export async function quickAddTodoToDay(
 }
 
 export async function saveMonthlyReview(userId: string, review: MonthlyReview): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    const { error } = await supabase
-      .from('monthly_reviews')
-      .upsert({ ...review, user_id: userId, updated_at: new Date().toISOString() });
-    if (error) throw error;
-    return;
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      const { error } = await supabase!
+        .from('monthly_reviews')
+        .upsert({ ...review, user_id: userId, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      return;
+    } catch (err) {
+      console.warn('Supabase saveMonthlyReview error, saving locally:', err);
+    }
   }
 
   const key = `monthly_${userId}`;
@@ -562,9 +616,9 @@ export async function saveMonthlyReview(userId: string, review: MonthlyReview): 
  * 4. GOAL TRACKER (Page 3)
  * ============================================================================== */
 export async function getGoals(userId: string): Promise<Goal[]> {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseActiveForUser(userId)) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('goals')
         .select('*')
         .eq('user_id', userId)
@@ -627,14 +681,18 @@ export async function getGoals(userId: string): Promise<Goal[]> {
 }
 
 export async function saveGoal(userId: string, goal: Goal): Promise<Goal> {
-  if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase
-      .from('goals')
-      .upsert({ ...goal, user_id: userId, updated_at: new Date().toISOString() })
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      const { data, error } = await supabase!
+        .from('goals')
+        .upsert({ ...goal, user_id: userId, updated_at: new Date().toISOString() })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.warn('Supabase saveGoal error, saving locally:', err);
+    }
   }
 
   const key = `goals_${userId}`;
@@ -650,10 +708,14 @@ export async function saveGoal(userId: string, goal: Goal): Promise<Goal> {
 }
 
 export async function deleteGoal(userId: string, goalId: string): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    const { error } = await supabase.from('goals').delete().eq('id', goalId).eq('user_id', userId);
-    if (error) throw error;
-    return;
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      const { error } = await supabase!.from('goals').delete().eq('id', goalId).eq('user_id', userId);
+      if (error) throw error;
+      return;
+    } catch (err) {
+      console.warn('Supabase deleteGoal error, deleting locally:', err);
+    }
   }
 
   const key = `goals_${userId}`;
@@ -663,11 +725,15 @@ export async function deleteGoal(userId: string, goalId: string): Promise<void> 
 
 export async function reorderGoals(userId: string, reordered: Goal[]): Promise<void> {
   const updated = reordered.map((g, i) => ({ ...g, sort_order: i }));
-  if (isSupabaseConfigured && supabase) {
-    for (const item of updated) {
-      await supabase.from('goals').upsert(item);
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      for (const item of updated) {
+        await supabase!.from('goals').upsert(item);
+      }
+      return;
+    } catch (err) {
+      console.warn('Supabase reorderGoals error, updating locally:', err);
     }
-    return;
   }
   setLocal(`goals_${userId}`, updated);
 }
@@ -680,9 +746,9 @@ export async function getSmartGoals(userId: string): Promise<{
   steps: Record<string, SmartGoalStep[]>;
   milestones: Record<string, SmartGoalMilestone[]>;
 }> {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseActiveForUser(userId)) {
     try {
-      const { data: goals, error } = await supabase
+      const { data: goals, error } = await supabase!
         .from('smart_goals')
         .select('*')
         .eq('user_id', userId)
@@ -694,13 +760,13 @@ export async function getSmartGoals(userId: string): Promise<{
 
       if (goals && goals.length > 0) {
         const goalIds = goals.map((g) => g.id);
-        const { data: allSteps } = await supabase
+        const { data: allSteps } = await supabase!
           .from('smart_goal_steps')
           .select('*')
           .in('smart_goal_id', goalIds)
           .order('sort_order', { ascending: true });
 
-        const { data: allMiles } = await supabase
+        const { data: allMiles } = await supabase!
           .from('smart_goal_milestones')
           .select('*')
           .in('smart_goal_id', goalIds)
@@ -775,14 +841,18 @@ export async function getSmartGoals(userId: string): Promise<{
 }
 
 export async function saveSmartGoal(userId: string, goal: SmartGoal): Promise<SmartGoal> {
-  if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase
-      .from('smart_goals')
-      .upsert({ ...goal, user_id: userId, updated_at: new Date().toISOString() })
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      const { data, error } = await supabase!
+        .from('smart_goals')
+        .upsert({ ...goal, user_id: userId, updated_at: new Date().toISOString() })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.warn('Supabase saveSmartGoal error, saving locally:', err);
+    }
   }
 
   const key = `smart_goals_${userId}`;
@@ -798,9 +868,13 @@ export async function saveSmartGoal(userId: string, goal: SmartGoal): Promise<Sm
 }
 
 export async function deleteSmartGoal(userId: string, goalId: string): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    await supabase.from('smart_goals').delete().eq('id', goalId).eq('user_id', userId);
-    return;
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      await supabase!.from('smart_goals').delete().eq('id', goalId).eq('user_id', userId);
+      return;
+    } catch (err) {
+      console.warn('Supabase deleteSmartGoal error, deleting locally:', err);
+    }
   }
   const gKey = `smart_goals_${userId}`;
   const list = getLocal<SmartGoal[]>(gKey, []).filter((g) => g.id !== goalId);
@@ -808,11 +882,15 @@ export async function deleteSmartGoal(userId: string, goalId: string): Promise<v
 }
 
 export async function saveSmartGoalSteps(userId: string, smartGoalId: string, steps: SmartGoalStep[]): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    for (const step of steps) {
-      await supabase.from('smart_goal_steps').upsert({ ...step, user_id: userId, smart_goal_id: smartGoalId });
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      for (const step of steps) {
+        await supabase!.from('smart_goal_steps').upsert({ ...step, user_id: userId, smart_goal_id: smartGoalId });
+      }
+      return;
+    } catch (err) {
+      console.warn('Supabase saveSmartGoalSteps error, saving locally:', err);
     }
-    return;
   }
   const stepsMap = getLocal<Record<string, SmartGoalStep[]>>(`smart_steps_${userId}`, {});
   stepsMap[smartGoalId] = steps;
@@ -820,11 +898,15 @@ export async function saveSmartGoalSteps(userId: string, smartGoalId: string, st
 }
 
 export async function saveSmartGoalMilestones(userId: string, smartGoalId: string, milestones: SmartGoalMilestone[]): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    for (const m of milestones) {
-      await supabase.from('smart_goal_milestones').upsert({ ...m, user_id: userId, smart_goal_id: smartGoalId });
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      for (const m of milestones) {
+        await supabase!.from('smart_goal_milestones').upsert({ ...m, user_id: userId, smart_goal_id: smartGoalId });
+      }
+      return;
+    } catch (err) {
+      console.warn('Supabase saveSmartGoalMilestones error, saving locally:', err);
     }
-    return;
   }
   const milesMap = getLocal<Record<string, SmartGoalMilestone[]>>(`smart_miles_${userId}`, {});
   milesMap[smartGoalId] = milestones;
@@ -838,9 +920,9 @@ export async function getPromotionPlans(userId: string): Promise<{
   plans: PromotionPlan[];
   items: Record<string, PromotionPlanItem[]>;
 }> {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseActiveForUser(userId)) {
     try {
-      const { data: plans, error } = await supabase
+      const { data: plans, error } = await supabase!
         .from('promotion_plans')
         .select('*')
         .eq('user_id', userId)
@@ -850,7 +932,7 @@ export async function getPromotionPlans(userId: string): Promise<{
       const itemsMap: Record<string, PromotionPlanItem[]> = {};
       if (plans && plans.length > 0) {
         const planIds = plans.map((p) => p.id);
-        const { data: allItems } = await supabase
+        const { data: allItems } = await supabase!
           .from('promotion_plan_items')
           .select('*')
           .in('plan_id', planIds)
@@ -907,14 +989,18 @@ export async function getPromotionPlans(userId: string): Promise<{
 }
 
 export async function savePromotionPlan(userId: string, plan: PromotionPlan): Promise<PromotionPlan> {
-  if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase
-      .from('promotion_plans')
-      .upsert({ ...plan, user_id: userId, updated_at: new Date().toISOString() })
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+  if (isSupabaseActiveForUser(userId)) {
+    try {
+      const { data, error } = await supabase!
+        .from('promotion_plans')
+        .upsert({ ...plan, user_id: userId, updated_at: new Date().toISOString() })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.warn('Supabase savePromotionPlan error, saving locally:', err);
+    }
   }
 
   const pKey = `promo_plans_${userId}`;
@@ -930,11 +1016,15 @@ export async function savePromotionPlan(userId: string, plan: PromotionPlan): Pr
 }
 
 export async function savePromotionPlanItems(userId: string, planId: string, items: PromotionPlanItem[]): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    for (const item of items) {
-      await supabase.from('promotion_plan_items').upsert({ ...item, plan_id: planId, user_id: userId });
+  if (items.length > 0 && isSupabaseActiveForUser(items[0]?.user_id || userId)) {
+    try {
+      for (const item of items) {
+        await supabase!.from('promotion_plan_items').upsert({ ...item, plan_id: planId, user_id: userId });
+      }
+      return;
+    } catch (err) {
+      console.warn('Supabase savePromotionPlanItems error, saving locally:', err);
     }
-    return;
   }
   const itemsMap = getLocal<Record<string, PromotionPlanItem[]>>(`promo_items_${userId}`, {});
   itemsMap[planId] = items;
@@ -945,9 +1035,9 @@ export async function savePromotionPlanItems(userId: string, planId: string, ite
  * 7. MANAGEMENT SYSTEMS (Page 6: System / Service / Sales)
  * ============================================================================== */
 export async function getManagementItems(userId: string, type: ManagementType): Promise<ManagementItem[]> {
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseActiveForUser(userId)) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabase!
         .from('management_items')
         .select('*')
         .eq('user_id', userId)
@@ -1012,11 +1102,15 @@ export async function getManagementItems(userId: string, type: ManagementType): 
 }
 
 export async function saveManagementItems(userId: string, type: ManagementType, items: ManagementItem[]): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    for (const item of items) {
-      await supabase.from('management_items').upsert({ ...item, user_id: userId, type });
+  if (items.length > 0 && isSupabaseActiveForUser(items[0]?.user_id || userId)) {
+    try {
+      for (const item of items) {
+        await supabase!.from('management_items').upsert({ ...item, user_id: userId, type });
+      }
+      return;
+    } catch (err) {
+      console.warn('Supabase saveManagementItems error, saving locally:', err);
     }
-    return;
   }
   const key = `mgmt_${userId}_${type}`;
   setLocal(key, items);
@@ -1026,10 +1120,15 @@ export async function saveManagementItems(userId: string, type: ManagementType, 
  * 8. ADMIN QUERIES (Metadata only - zero diary content access)
  * ============================================================================== */
 export async function getAdminUsersList(): Promise<Profile[]> {
-  if (isSupabaseConfigured && supabase) {
-    const { data, error } = await supabase.from('profiles').select('id, name, business_name, timezone, is_admin, created_at, updated_at');
-    if (error) throw error;
-    return data || [];
+  const currentId = getActiveSupabaseUserId();
+  if (currentId && isSupabaseActiveForUser(currentId)) {
+    try {
+      const { data, error } = await supabase!.from('profiles').select('id, name, business_name, timezone, is_admin, created_at, updated_at');
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.warn('Supabase getAdminUsersList error, using local fallback:', err);
+    }
   }
 
   const profilesMap = getLocal<Record<string, Profile>>('profiles', {});
