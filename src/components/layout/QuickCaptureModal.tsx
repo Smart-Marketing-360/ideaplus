@@ -215,14 +215,14 @@ export const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, on
 
               {/* Footer controls */}
               <div className="pt-4 mt-2 border-t border-slate-200 flex items-center justify-between">
-                <div className="text-caption text-slate-400 flex items-center gap-1.5">
+                <div className="hidden sm:flex text-caption text-slate-400 items-center gap-1.5">
                   <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-[10px] text-slate-600">Enter</kbd>
                   <span>to save</span>
                   <span className="text-slate-300">·</span>
                   <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-[10px] text-slate-600">Esc</kbd>
                   <span>to close</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                   <button
                     type="button"
                     onClick={onClose}

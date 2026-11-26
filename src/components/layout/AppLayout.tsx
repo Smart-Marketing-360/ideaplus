@@ -47,7 +47,7 @@ export const AppLayout: React.FC = () => {
       </div>
 
       {/* Mobile Navigation Bar (5 tabs below 768px) */}
-      <MobileNav />
+      <MobileNav onOpenQuickCapture={() => setQuickCaptureOpen(true)} />
 
       {/* Global Quick Capture Modal */}
       <QuickCaptureModal

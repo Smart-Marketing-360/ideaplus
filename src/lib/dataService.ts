@@ -818,7 +818,7 @@ export async function getSmartGoals(userId: string): Promise<{
     setLocal(gKey, goals);
 
     stepsMap[demoId] = [
-      { id: crypto.randomUUID(), smart_goal_id: demoId, user_id: userId, description: 'Finalize brand palette and dairy paper CSS', start_date: '2026-11-01', finish_date: '2026-11-05', done: true, sort_order: 0 },
+      { id: crypto.randomUUID(), smart_goal_id: demoId, user_id: userId, description: 'Finalize brand palette and diary paper CSS', start_date: '2026-11-01', finish_date: '2026-11-05', done: true, sort_order: 0 },
       { id: crypto.randomUUID(), smart_goal_id: demoId, user_id: userId, description: 'Implement Daily Planner with Priorities and 6am-9pm schedule', start_date: '2026-11-06', finish_date: '2026-11-12', done: true, sort_order: 1 },
       { id: crypto.randomUUID(), smart_goal_id: demoId, user_id: userId, description: 'Develop Monthly Review & Time Audit Matrix', start_date: '2026-11-13', finish_date: '2026-11-18', done: true, sort_order: 2 },
       { id: crypto.randomUUID(), smart_goal_id: demoId, user_id: userId, description: 'Build SMART Goals Worksheet with milestone progress chart', start_date: '2026-11-19', finish_date: '2026-11-25', done: false, sort_order: 3 },

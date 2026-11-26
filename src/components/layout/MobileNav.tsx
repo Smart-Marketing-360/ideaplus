@@ -12,12 +12,17 @@ import {
   Briefcase,
   Settings,
   ShieldCheck,
-  LogOut
+  LogOut,
+  Plus
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { brandConfig } from '../../config/brand.config';
 
-export const MobileNav: React.FC = () => {
+interface MobileNavProps {
+  onOpenQuickCapture?: () => void;
+}
+
+export const MobileNav: React.FC<MobileNavProps> = ({ onOpenQuickCapture }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { profile, isAdmin, logout } = useAuth();
 
@@ -56,6 +61,20 @@ export const MobileNav: React.FC = () => {
             </div>
 
             <div className="py-2 space-y-1">
+              {onOpenQuickCapture && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    onOpenQuickCapture();
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-body-medium min-h-[44px] bg-diary-gold text-diary-navy font-bold shadow-xs active:scale-95 mb-2 transition-all"
+                >
+                  <Plus className="w-4 h-4 text-diary-navy stroke-[3]" />
+                  <span>+ Quick task entry</span>
+                </button>
+              )}
+
               <NavLink
                 to="/monthly"
                 onClick={() => setDrawerOpen(false)}

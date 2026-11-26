@@ -282,20 +282,31 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
       {/* RIGHT: Quick capture, search, notifications, primary action (Today/Print), more "⋯", user menu */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
 
-        {/* Global Quick Capture Button (Cmd/Ctrl + K) */}
+        {/* Global Quick Capture Button (Cmd/Ctrl + K / Mobile +) */}
         {onOpenQuickCapture && (
-          <button
-            type="button"
-            onClick={onOpenQuickCapture}
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-diary-navy bg-diary-cream-light hover:bg-diary-cream border border-diary-navy/20 rounded-lg transition-all min-h-[34px] shadow-2xs hover:shadow-xs"
-            title="Quick capture task to today's diary (Ctrl+K / Cmd+K)"
-          >
-            <Plus className="w-3.5 h-3.5 text-diary-navy" />
-            <span className="font-heading">Capture</span>
-            <kbd className="px-1.5 py-0.5 rounded bg-white border border-diary-navy/20 font-mono text-[9px] text-diary-navy/70 leading-none">
-              ⌘K
-            </kbd>
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onOpenQuickCapture}
+              className="sm:hidden p-2 rounded-lg bg-diary-gold/20 text-diary-navy hover:bg-diary-gold/30 min-w-[36px] min-h-[36px] flex items-center justify-center active:scale-95 transition-all"
+              title="Quick capture task"
+              aria-label="Quick capture task"
+            >
+              <Plus className="w-4 h-4 text-diary-navy stroke-[2.5]" />
+            </button>
+            <button
+              type="button"
+              onClick={onOpenQuickCapture}
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-diary-navy bg-diary-cream-light hover:bg-diary-cream border border-diary-navy/20 rounded-lg transition-all min-h-[34px] shadow-2xs hover:shadow-xs"
+              title="Quick capture task to today's diary (Ctrl+K / Cmd+K)"
+            >
+              <Plus className="w-3.5 h-3.5 text-diary-navy" />
+              <span className="font-heading">Capture</span>
+              <kbd className="px-1.5 py-0.5 rounded bg-white border border-diary-navy/20 font-mono text-[9px] text-diary-navy/70 leading-none">
+                ⌘K
+              </kbd>
+            </button>
+          </>
         )}
 
         {/* Search Trigger (Desktop/Tablet) */}

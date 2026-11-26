@@ -379,9 +379,11 @@ export const MonthlyReviewPage: React.FC = () => {
                           backgroundColor: '#2A3B6B',
                           color: '#FFFFFF',
                           borderRadius: '8px',
-                          border: 'none',
+                          border: '1px solid #F2B230',
                           fontSize: '12px'
                         }}
+                        itemStyle={{ color: '#F6EBD3', fontWeight: 600 }}
+                        labelStyle={{ color: '#FFFFFF', fontWeight: 'bold' }}
                         formatter={(val: any, _name: any, item: any) => [
                           `${val} hrs`,
                           item.payload.fullName || item.payload.name

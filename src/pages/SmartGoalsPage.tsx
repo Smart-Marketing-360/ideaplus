@@ -343,7 +343,7 @@ export const SmartGoalsPage: React.FC = () => {
 
                 {/* GOAL INPUT */}
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1.5">
                     <label className="text-caption font-bold text-diary-navy">
                       Goal
                     </label>
