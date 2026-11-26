@@ -239,7 +239,7 @@ export const PromotionPlansPage: React.FC = () => {
                       <div className="text-tag font-bold uppercase text-diary-navy/70 tracking-wider">
                         Linked Strategic Goal
                       </div>
-                      <div className="text-caption text-diary-navy/60 font-medium truncate">
+                      <div className="text-caption text-diary-navy/60 font-medium">
                         Connect this promotion campaign directly to a company goal
                       </div>
                     </div>

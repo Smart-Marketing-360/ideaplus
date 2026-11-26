@@ -558,7 +558,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
           <button
             type="button"
             onClick={handlePrint}
-            className="inline-flex items-center justify-center p-2 sm:px-3 sm:py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg text-xs sm:text-body-medium font-semibold transition-colors shadow-xs active:scale-95 min-w-[36px] min-h-[36px] shrink-0"
+            className="hidden sm:inline-flex items-center justify-center p-2 sm:px-3 sm:py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg text-xs sm:text-body-medium font-semibold transition-colors shadow-xs active:scale-95 min-w-[36px] min-h-[36px] shrink-0"
             title="Print / Save as PDF"
             aria-label="Print diary page"
           >
@@ -618,8 +618,8 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
           )}
         </div>
 
-        {/* User Avatar Menu */}
-        <div className="relative" ref={userMenuRef}>
+        {/* User Avatar Menu (desktop/tablet; mobile access is inside bottom nav More drawer) */}
+        <div className="hidden sm:block relative" ref={userMenuRef}>
           <button
             type="button"
             onClick={() => setUserMenuOpen(!userMenuOpen)}

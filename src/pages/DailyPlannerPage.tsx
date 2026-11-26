@@ -524,7 +524,7 @@ export const DailyPlannerPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 auto-rows-fr sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
+              <div className="grid grid-cols-2 grid-rows-2 sm:grid-rows-none sm:flex sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
                 {(['check1', 'check2', 'check3', 'check4'] as const).map((chkKey, i) => {
                   const isChecked = Boolean(pageData?.[chkKey]);
                   return (
@@ -532,7 +532,7 @@ export const DailyPlannerPage: React.FC = () => {
                       key={chkKey}
                       type="button"
                       onClick={() => toggleCheck(chkKey)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-caption sm:text-body-medium transition-all min-h-[48px] h-full ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-caption sm:text-body-medium transition-all min-h-[52px] h-full ${
                         isChecked
                           ? 'bg-diary-navy text-white font-medium shadow-xs border border-diary-navy'
                           : 'bg-diary-cream-light/60 hover:bg-diary-cream text-diary-navy border border-diary-navy/20'

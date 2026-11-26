@@ -201,8 +201,8 @@ export const ManagementSystemsPage: React.FC = () => {
           </div>
         ) : (
           <>
-            {/* DESKTOP / TABLET TABLE */}
-            <div className="hidden md:block diary-card overflow-hidden">
+            {/* DESKTOP TABLE */}
+            <div className="hidden lg:block diary-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="diary-table">
                   <thead>
@@ -304,8 +304,8 @@ export const ManagementSystemsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* MOBILE STACKED CARDS (below 768px) */}
-            <div className="md:hidden space-y-4">
+            {/* RESPONSIVE STACKED CARDS (below 1024px) */}
+            <div className="lg:hidden space-y-4">
               {filteredItems.length === 0 ? (
                 <div className="diary-card p-6 text-center text-slate-400">
                   No management items found.
