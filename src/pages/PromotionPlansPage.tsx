@@ -245,13 +245,13 @@ export const PromotionPlansPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
                     <select
                       value={activePlan.linked_goal_id || ''}
                       onChange={(e) => handleUpdatePlan({ linked_goal_id: e.target.value || null })}
-                      className="text-caption sm:text-body-medium font-semibold px-3 py-1.5 rounded-lg bg-white border border-diary-navy/20 text-diary-navy focus:outline-none focus:ring-1 focus:ring-diary-navy cursor-pointer max-w-full sm:max-w-xs min-h-[38px] shadow-2xs"
+                      className="w-full sm:w-auto text-caption sm:text-body-medium font-semibold px-3 py-2 rounded-lg bg-white border border-diary-navy/20 text-diary-navy focus:outline-none focus:ring-1 focus:ring-diary-navy cursor-pointer max-w-full sm:max-w-xs min-h-[38px] shadow-2xs"
                     >
-                      <option value="">-- No goal linked (Standalone) --</option>
+                      <option value="">None (Standalone campaign)</option>
                       {goals.map((g) => {
                         const statusLabel = g.status === 2 ? 'Done' : g.status === 1 ? 'In progress' : 'Not started';
                         return (

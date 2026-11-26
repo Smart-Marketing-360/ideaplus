@@ -166,7 +166,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
     if (path.startsWith('/goals')) return 'Goal tracker';
     if (path.startsWith('/smart-goals')) return 'SMART goals';
     if (path.startsWith('/promotion')) return 'Promotion plans';
-    if (path.startsWith('/management')) return 'Management';
+    if (path.startsWith('/management')) return 'Management systems';
     if (path.startsWith('/settings')) return 'Settings';
     if (path.startsWith('/admin')) return 'User management';
     return 'Diary';
@@ -252,7 +252,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onToggleSidebar, onOpenQui
         </div>
 
         {/* Page Title */}
-        <h1 className="font-heading text-sm sm:text-base md:text-section-title text-diary-navy font-bold tracking-normal truncate">
+        <h1 className="font-heading text-xs sm:text-base md:text-section-title text-diary-navy font-bold tracking-normal truncate">
           {getPageTitle()}
         </h1>
 

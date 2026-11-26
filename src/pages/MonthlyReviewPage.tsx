@@ -193,11 +193,11 @@ export const MonthlyReviewPage: React.FC = () => {
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <div className="flex items-center gap-3">
-              <span className="font-heading text-section-title text-diary-navy font-bold">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 text-center min-w-0">
+              <span className="font-heading text-sm sm:text-section-title text-diary-navy font-bold whitespace-nowrap">
                 {MONTH_NAMES[month - 1]} {year}
               </span>
-              <span className="text-caption font-bold text-diary-navy bg-diary-gold/25 px-2.5 py-0.5 rounded-full border border-diary-gold/40">
+              <span className="text-[11px] sm:text-caption font-bold text-diary-navy bg-diary-gold/25 px-2.5 py-0.5 rounded-full border border-diary-gold/40 whitespace-nowrap">
                 {totalTicks} ticks logged
               </span>
             </div>
@@ -406,7 +406,7 @@ export const MonthlyReviewPage: React.FC = () => {
             {/* RESULTS OF THE MONTH */}
             <div className="lg:col-span-8 diary-card p-4 md:p-6 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-diary-navy/10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 mb-3 border-b border-diary-navy/10">
                   <div className="flex items-center gap-2">
                     <FileCheck2 className="w-4 h-4 text-diary-navy" />
                     <h2 className="font-heading text-card-title text-diary-navy font-semibold">
@@ -478,7 +478,7 @@ export const MonthlyReviewPage: React.FC = () => {
             {/* GOAL TRACKING COMPARISON */}
             <div className="lg:col-span-7 diary-card p-4 md:p-6 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-diary-navy/10">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 mb-3 border-b border-diary-navy/10">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-diary-navy" />
                     <h2 className="font-heading text-card-title text-diary-navy font-semibold">
