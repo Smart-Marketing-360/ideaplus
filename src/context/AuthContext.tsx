@@ -57,8 +57,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize session
   useEffect(() => {
+    let safetyTimer: any = null;
+
     async function initAuth() {
       setIsLoading(true);
+
+      // Hard safety timer: prevent indefinite "Loading Strategic Diary..." spinner
+      safetyTimer = setTimeout(() => {
+        setIsLoading(false);
+      }, 2500);
+
       try {
         if (isSupabaseConfigured && supabase) {
           const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
@@ -110,11 +118,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('Auth initialization error:', err);
         await restoreLocalUser();
       } finally {
+        if (safetyTimer) clearTimeout(safetyTimer);
         setIsLoading(false);
       }
     }
 
     initAuth();
+
+    return () => {
+      if (safetyTimer) clearTimeout(safetyTimer);
+    };
   }, []);
 
   const restoreLocalUser = async () => {

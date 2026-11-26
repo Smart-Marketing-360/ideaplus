@@ -16,6 +16,24 @@
     font-size: 15px;
     line-height: 1.6;
     overflow-x: hidden;
+    overflow-wrap: break-word;
+  }
+
+  /* Prevent iOS Safari from zooming into form fields on focus */
+  @media screen and (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Accessible text wrap */
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p, li {
+    text-wrap: pretty;
   }
 
   /* Ensure all numbers use tabular figures for clean alignment */

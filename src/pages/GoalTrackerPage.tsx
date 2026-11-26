@@ -401,6 +401,26 @@ export const GoalTrackerPage: React.FC = () => {
                     placeholder="Enter goal..."
                     className="w-full p-2.5 bg-diary-cream-light/40 rounded-lg border border-diary-navy/20 text-body-medium font-semibold text-diary-text focus:outline-none focus:bg-white"
                   />
+                  {(() => {
+                    const linkedPlans = promotionPlans.filter((p) => p.linked_goal_id === g.id);
+                    if (linkedPlans.length === 0) return null;
+                    return (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                        {linkedPlans.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => navigate('/promotion')}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-diary-navy bg-diary-cream hover:bg-diary-cream-dark px-2 py-0.5 rounded-md border border-diary-navy/20 transition-all shadow-2xs"
+                            title="View linked Promotion Campaign"
+                          >
+                            <Megaphone className="w-3 h-3 text-diary-navy" />
+                            <span>Campaign: {p.title || 'Untitled'}</span>
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div>

@@ -299,7 +299,8 @@ export const PromotionPlansPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto rounded-lg border border-diary-navy/20">
+                {/* DESKTOP TABLE VIEW */}
+                <div className="hidden md:block overflow-x-auto rounded-lg border border-diary-navy/20">
                   <table className="diary-table">
                     <thead>
                       <tr>
@@ -397,6 +398,99 @@ export const PromotionPlansPage: React.FC = () => {
                       </tr>
                     </tfoot>
                   </table>
+                </div>
+
+                {/* MOBILE STACKED CARDS VIEW (<md) */}
+                <div className="md:hidden space-y-3">
+                  {activeItems.map((item, idx) => {
+                    const { status } = getDeadlineStatus(item.deadline);
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-3.5 bg-diary-cream-light/40 rounded-xl border border-diary-navy/15 space-y-2.5 shadow-2xs"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-heading font-bold text-diary-navy text-caption px-2 py-0.5 bg-diary-cream rounded border border-diary-navy/15">
+                            Action #{idx + 1}
+                          </span>
+                          <div
+                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
+                              status === 'overdue'
+                                ? 'bg-red-50 text-red-800 border-red-200'
+                                : status === 'due_soon'
+                                ? 'bg-amber-50 text-amber-900 border-amber-200'
+                                : 'bg-white text-diary-navy border-diary-navy/20'
+                            }`}
+                          >
+                            {status === 'overdue' && (
+                              <AlertTriangle className="w-3 h-3 text-red-600 shrink-0" />
+                            )}
+                            {status === 'due_soon' && (
+                              <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                            )}
+                            <input
+                              type="date"
+                              value={item.deadline || ''}
+                              onChange={(e) => handleUpdateItem(item.id, { deadline: e.target.value })}
+                              className="bg-transparent focus:outline-none cursor-pointer text-[11px]"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <input
+                            type="text"
+                            value={item.plan_of_action}
+                            onChange={(e) => handleUpdateItem(item.id, { plan_of_action: e.target.value })}
+                            placeholder={`Action item #${idx + 1}...`}
+                            className="w-full p-2.5 bg-white rounded-lg border border-diary-navy/20 text-body-medium text-diary-text focus:outline-none focus:ring-1 focus:ring-diary-navy min-h-[44px]"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-tag uppercase text-diary-navy/60 font-semibold block mb-0.5">
+                              Owner
+                            </label>
+                            <input
+                              type="text"
+                              value={item.responsibility}
+                              onChange={(e) => handleUpdateItem(item.id, { responsibility: e.target.value })}
+                              placeholder="Person / team..."
+                              className="w-full p-2 bg-white rounded-lg border border-diary-navy/20 text-caption text-diary-text focus:outline-none min-h-[38px]"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-tag uppercase text-diary-navy/60 font-semibold block mb-0.5">
+                              Budget (₹)
+                            </label>
+                            <div className="flex items-center bg-white rounded-lg border border-diary-navy/20 px-2 min-h-[38px]">
+                              <span className="text-diary-navy/40 text-caption font-medium mr-1">₹</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="500"
+                                value={item.budget || 0}
+                                onChange={(e) => handleUpdateItem(item.id, { budget: parseFloat(e.target.value) || 0 })}
+                                className="w-full text-right font-heading font-semibold text-caption text-diary-navy bg-transparent focus:outline-none tabular-nums"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Mobile Budget Summary */}
+                  <div className="p-3 bg-diary-cream rounded-xl border border-diary-navy/20 flex items-center justify-between">
+                    <span className="text-caption font-heading font-bold text-diary-navy">
+                      Total budget allocated:
+                    </span>
+                    <span className="text-body-medium font-heading font-bold text-diary-navy tabular-nums">
+                      {formatINR(totalBudget)}
+                    </span>
+                  </div>
                 </div>
 
                 <button

@@ -243,7 +243,7 @@ export const DashboardPage: React.FC = () => {
 
                 {/* Focus Goal Quote */}
                 <div className="mb-4">
-                  <h2 className="font-heading text-section-title text-diary-navy leading-snug font-bold">
+                  <h2 className="font-heading text-base sm:text-section-title text-diary-navy leading-snug font-bold">
                     {dailyPage?.goal_for_day ? (
                       `"${dailyPage.goal_for_day}"`
                     ) : (
@@ -431,23 +431,23 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* ROW 2: FOUR EQUAL KPI CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* ROW 2: FOUR EQUAL KPI CARDS (2x2 on Mobile, 4 across on Desktop) */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {/* KPI 1: Goals done */}
             <div
               onClick={() => navigate('/goals')}
-              className="diary-card p-4 md:p-6 cursor-pointer hover:border-diary-navy/40 transition-colors"
+              className="diary-card p-3.5 sm:p-4 md:p-6 cursor-pointer hover:border-diary-navy/40 transition-colors"
             >
               <div className="flex items-center justify-between text-diary-navy/60 mb-2">
                 <Target className="w-4 h-4 text-diary-navy" />
-                <span className="text-caption text-diary-navy font-bold bg-diary-gold/25 px-2 py-0.5 rounded border border-diary-gold/30">
+                <span className="text-[11px] sm:text-caption text-diary-navy font-bold bg-diary-gold/25 px-1.5 sm:px-2 py-0.5 rounded border border-diary-gold/30">
                   {doneGoals}/{totalGoals}
                 </span>
               </div>
-              <div className="text-[28px] font-heading font-bold text-diary-navy leading-none tabular-nums">
+              <div className="text-2xl sm:text-[28px] font-heading font-bold text-diary-navy leading-none tabular-nums">
                 {goalPercent}%
               </div>
-              <div className="text-caption font-semibold text-diary-navy/70 mt-1">
+              <div className="text-[11px] sm:text-caption font-semibold text-diary-navy/70 mt-1">
                 Goals completed
               </div>
             </div>
@@ -455,18 +455,18 @@ export const DashboardPage: React.FC = () => {
             {/* KPI 2: Time audit ticks */}
             <div
               onClick={() => navigate('/monthly')}
-              className="diary-card p-4 md:p-6 cursor-pointer hover:border-diary-navy/40 transition-colors"
+              className="diary-card p-3.5 sm:p-4 md:p-6 cursor-pointer hover:border-diary-navy/40 transition-colors"
             >
               <div className="flex items-center justify-between text-diary-navy/60 mb-2">
                 <Clock className="w-4 h-4 text-diary-navy" />
-                <span className="text-caption text-diary-navy/80 font-semibold bg-diary-cream-light px-2 py-0.5 rounded border border-diary-navy/15">
+                <span className="text-[11px] sm:text-caption text-diary-navy/80 font-semibold bg-diary-cream-light px-1.5 sm:px-2 py-0.5 rounded border border-diary-navy/15">
                   This month
                 </span>
               </div>
-              <div className="text-[28px] font-heading font-bold text-diary-navy leading-none tabular-nums">
+              <div className="text-2xl sm:text-[28px] font-heading font-bold text-diary-navy leading-none tabular-nums">
                 {totalTicks}
               </div>
-              <div className="text-caption font-semibold text-diary-navy/70 mt-1">
+              <div className="text-[11px] sm:text-caption font-semibold text-diary-navy/70 mt-1">
                 Time audit ticks
               </div>
             </div>
@@ -474,18 +474,18 @@ export const DashboardPage: React.FC = () => {
             {/* KPI 3: Open challenges */}
             <div
               onClick={() => navigate('/management')}
-              className="diary-card p-4 md:p-6 cursor-pointer hover:border-diary-navy/40 transition-colors"
+              className="diary-card p-3.5 sm:p-4 md:p-6 cursor-pointer hover:border-diary-navy/40 transition-colors"
             >
               <div className="flex items-center justify-between text-diary-navy/60 mb-2">
                 <Briefcase className="w-4 h-4 text-diary-navy" />
-                <span className="text-caption text-amber-900 font-bold bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                <span className="text-[11px] sm:text-caption text-amber-900 font-bold bg-amber-100 px-1.5 sm:px-2 py-0.5 rounded border border-amber-200">
                   Systems
                 </span>
               </div>
-              <div className="text-[28px] font-heading font-bold text-diary-navy leading-none tabular-nums">
+              <div className="text-2xl sm:text-[28px] font-heading font-bold text-diary-navy leading-none tabular-nums">
                 {openChallenges.length}
               </div>
-              <div className="text-caption font-semibold text-diary-navy/70 mt-1">
+              <div className="text-[11px] sm:text-caption font-semibold text-diary-navy/70 mt-1">
                 Open challenges
               </div>
             </div>
@@ -493,18 +493,18 @@ export const DashboardPage: React.FC = () => {
             {/* KPI 4: Overdue plans */}
             <div
               onClick={() => navigate('/promotion')}
-              className="diary-card p-4 md:p-6 cursor-pointer hover:border-diary-navy/40 transition-colors"
+              className="diary-card p-3.5 sm:p-4 md:p-6 cursor-pointer hover:border-diary-navy/40 transition-colors"
             >
               <div className="flex items-center justify-between text-diary-navy/60 mb-2">
                 <Megaphone className="w-4 h-4 text-diary-navy" />
-                <span className="text-tag uppercase text-red-800 bg-red-100 px-2 py-0.5 rounded font-bold border border-red-200">
+                <span className="text-[10px] sm:text-tag uppercase text-red-800 bg-red-100 px-1.5 sm:px-2 py-0.5 rounded font-bold border border-red-200">
                   Action
                 </span>
               </div>
-              <div className="text-[28px] font-heading font-bold text-red-600 leading-none tabular-nums">
+              <div className="text-2xl sm:text-[28px] font-heading font-bold text-red-600 leading-none tabular-nums">
                 {overduePromoItems.length}
               </div>
-              <div className="text-caption font-semibold text-diary-navy/70 mt-1">
+              <div className="text-[11px] sm:text-caption font-semibold text-diary-navy/70 mt-1">
                 Overdue plans
               </div>
             </div>

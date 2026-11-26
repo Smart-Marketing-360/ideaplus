@@ -66,6 +66,7 @@ export const DailyPlannerPage: React.FC = () => {
   const [standupSweepData, setStandupSweepData] = useState<{ sourceDate: string; count: number; todos: DailyTodo[] } | null>(null);
   const [activeSlotMenuTodoId, setActiveSlotMenuTodoId] = useState<string | null>(null);
   const [syncingAudit, setSyncingAudit] = useState<boolean>(false);
+  const [mobilePlannerView, setMobilePlannerView] = useState<'both' | 'todos' | 'schedule'>('both');
 
   const todoInputMap = useRef<Map<string, HTMLInputElement>>(new Map());
   const priorityInputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -505,46 +506,50 @@ export const DailyPlannerPage: React.FC = () => {
             </div>
 
             {/* 4 Small Daily Checks & Sync Time Audit Button */}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="text-tag font-semibold uppercase text-diary-navy/70 tracking-wider">
-                Daily checks:
-              </span>
-              {(['check1', 'check2', 'check3', 'check4'] as const).map((chkKey, i) => {
-                const isChecked = Boolean(pageData?.[chkKey]);
-                return (
-                  <button
-                    key={chkKey}
-                    type="button"
-                    onClick={() => toggleCheck(chkKey)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-body-medium transition-all min-h-[44px] ${
-                      isChecked
-                        ? 'bg-diary-navy text-white font-medium shadow-xs border border-diary-navy'
-                        : 'bg-diary-cream-light/60 hover:bg-diary-cream text-diary-navy border border-diary-navy/20'
-                    }`}
-                  >
-                    {isChecked ? (
-                      <CheckSquare className="w-4 h-4 text-diary-gold" />
-                    ) : (
-                      <Square className="w-4 h-4 text-diary-navy/40" />
-                    )}
-                    <span className="leading-tight text-left">
-                      {checkLabels[i] || `Check ${i + 1}`}
-                    </span>
-                  </button>
-                );
-              })}
+            <div className="flex flex-col gap-2.5 w-full lg:w-auto">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-tag font-semibold uppercase text-diary-navy/70 tracking-wider">
+                  Daily checks:
+                </span>
+                {/* Sync to Monthly Review Time Audit */}
+                <button
+                  type="button"
+                  onClick={handleSyncToMonthlyAudit}
+                  disabled={syncingAudit}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-caption font-bold bg-diary-gold/25 hover:bg-diary-gold/35 text-diary-navy border border-diary-gold/40 transition-all min-h-[36px] shadow-2xs shrink-0 active:scale-95"
+                  title="1-Click sync today's checks to your Monthly Review Time Audit register"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 text-diary-navy ${syncingAudit ? 'animate-spin' : ''}`} />
+                  <span>Sync audit</span>
+                </button>
+              </div>
 
-              {/* Sync to Monthly Review Time Audit */}
-              <button
-                type="button"
-                onClick={handleSyncToMonthlyAudit}
-                disabled={syncingAudit}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-caption font-bold bg-diary-gold/25 hover:bg-diary-gold/35 text-diary-navy border border-diary-gold/40 transition-all min-h-[44px] shadow-2xs shrink-0 active:scale-95"
-                title="1-Click sync today's checks to your Monthly Review Time Audit register"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 text-diary-navy ${syncingAudit ? 'animate-spin' : ''}`} />
-                <span>Sync audit</span>
-              </button>
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3">
+                {(['check1', 'check2', 'check3', 'check4'] as const).map((chkKey, i) => {
+                  const isChecked = Boolean(pageData?.[chkKey]);
+                  return (
+                    <button
+                      key={chkKey}
+                      type="button"
+                      onClick={() => toggleCheck(chkKey)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-caption sm:text-body-medium transition-all min-h-[44px] ${
+                        isChecked
+                          ? 'bg-diary-navy text-white font-medium shadow-xs border border-diary-navy'
+                          : 'bg-diary-cream-light/60 hover:bg-diary-cream text-diary-navy border border-diary-navy/20'
+                      }`}
+                    >
+                      {isChecked ? (
+                        <CheckSquare className="w-4 h-4 text-diary-gold shrink-0" />
+                      ) : (
+                        <Square className="w-4 h-4 text-diary-navy/40 shrink-0" />
+                      )}
+                      <span className="leading-tight text-left line-clamp-2">
+                        {checkLabels[i] || `Check ${i + 1}`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -662,10 +667,43 @@ export const DailyPlannerPage: React.FC = () => {
             </div>
           </div>
 
+          {/* MOBILE PLANNER SEGMENT SWITCHER (<lg only) */}
+          <div className="lg:hidden flex items-center p-1 bg-diary-cream-light rounded-xl border border-diary-navy/15 mb-4 text-caption font-semibold">
+            <button
+              type="button"
+              onClick={() => setMobilePlannerView('both')}
+              className={`flex-1 py-2 rounded-lg text-center transition-all ${
+                mobilePlannerView === 'both' ? 'bg-diary-navy text-white font-bold shadow-xs' : 'text-diary-navy/70'
+              }`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobilePlannerView('todos')}
+              className={`flex-1 py-2 rounded-lg text-center transition-all ${
+                mobilePlannerView === 'todos' ? 'bg-diary-navy text-white font-bold shadow-xs' : 'text-diary-navy/70'
+              }`}
+            >
+              To-dos ({todos.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobilePlannerView('schedule')}
+              className={`flex-1 py-2 rounded-lg text-center transition-all ${
+                mobilePlannerView === 'schedule' ? 'bg-diary-navy text-white font-bold shadow-xs' : 'text-diary-navy/70'
+              }`}
+            >
+              Schedule
+            </button>
+          </div>
+
           {/* TO DO LIST & TIME SCHEDULE SECTION */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* TO DO LIST (Clean checkboxes, carry forward button, add row) */}
-            <div className="diary-card p-4 md:p-6 flex flex-col justify-between">
+            <div className={`diary-card p-4 md:p-6 flex flex-col justify-between ${
+              mobilePlannerView === 'schedule' ? 'hidden lg:flex' : 'flex'
+            }`}>
               <div>
                 <div className="flex items-center justify-between pb-3 mb-4 border-b border-diary-navy/10">
                   <div className="flex items-center gap-2">
@@ -677,7 +715,7 @@ export const DailyPlannerPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleCarryForward}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-diary-cream hover:bg-diary-cream-dark text-diary-navy font-semibold text-caption rounded-lg transition-colors border border-diary-navy/20 min-h-[44px] shadow-2xs"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-diary-cream hover:bg-diary-cream-dark text-diary-navy font-semibold text-caption rounded-lg transition-colors border border-diary-navy/20 min-h-[38px] sm:min-h-[44px] shadow-2xs"
                     title="Carry forward unfinished to-dos to tomorrow"
                   >
                     <ArrowRight className="w-3.5 h-3.5 text-diary-navy" />
@@ -705,14 +743,14 @@ export const DailyPlannerPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={handleRollPastTodos}
-                        className="px-3 py-1 bg-diary-navy hover:bg-diary-navy-dark text-white text-caption font-bold rounded-lg shadow-xs transition-all active:scale-95"
+                        className="px-3 py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white text-caption font-bold rounded-lg shadow-xs transition-all active:scale-95 min-h-[36px]"
                       >
                         Roll into today
                       </button>
                       <button
                         type="button"
                         onClick={() => setStandupSweepData(null)}
-                        className="p-1 text-amber-800/70 hover:text-amber-950"
+                        className="p-1 text-amber-800/70 hover:text-amber-950 min-h-[36px] min-w-[36px] flex items-center justify-center"
                         title="Dismiss"
                       >
                         <X className="w-4 h-4" />
@@ -744,7 +782,7 @@ export const DailyPlannerPage: React.FC = () => {
                   {todos.map((todo, idx) => (
                     <div
                       key={todo.id}
-                      className={`group relative flex items-center gap-2 sm:gap-2.5 p-2 rounded-lg border transition-all ${
+                      className={`group relative flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 p-2 rounded-lg border transition-all ${
                         activeSlotMenuTodoId === todo.id ? 'z-30' : 'z-0'
                       } ${
                         todo.done
@@ -752,39 +790,41 @@ export const DailyPlannerPage: React.FC = () => {
                           : 'bg-white border-diary-navy/15 hover:border-diary-navy/35 shadow-2xs'
                       }`}
                     >
-                      <button
-                        type="button"
-                        onClick={() => handleTodoToggle(todo.id)}
-                        className="shrink-0 p-2 text-diary-navy hover:text-diary-navy-dark min-w-[44px] min-h-[44px] flex items-center justify-center transition-transform active:scale-90"
-                        aria-label="Toggle to-do done"
-                      >
-                        {todo.done ? (
-                          <CheckSquare className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
-                        ) : (
-                          <Square className="w-4 h-4 text-diary-navy/40 group-hover:text-diary-navy/70" />
-                        )}
-                      </button>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => handleTodoToggle(todo.id)}
+                          className="shrink-0 p-1.5 text-diary-navy hover:text-diary-navy-dark min-w-[36px] min-h-[36px] flex items-center justify-center transition-transform active:scale-90"
+                          aria-label="Toggle to-do done"
+                        >
+                          {todo.done ? (
+                            <CheckSquare className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
+                          ) : (
+                            <Square className="w-4 h-4 text-diary-navy/40 group-hover:text-diary-navy/70" />
+                          )}
+                        </button>
 
-                      <input
-                        ref={(el) => {
-                          if (el) todoInputMap.current.set(todo.id, el);
-                          else todoInputMap.current.delete(todo.id);
-                        }}
-                        autoFocus={focusTodoId === todo.id}
-                        type="text"
-                        value={todo.text}
-                        onKeyDown={(e) => handleTodoKeyDown(e, idx)}
-                        onChange={(e) => handleTodoTextChange(todo.id, e.target.value)}
-                        placeholder={`To-do #${idx + 1}... (Press Enter for next)`}
-                        className={`flex-1 min-w-0 bg-transparent text-body-default focus:outline-none ${
-                          todo.done
-                            ? 'line-through text-diary-navy/45'
-                            : 'text-diary-text font-normal'
-                        }`}
-                      />
+                        <input
+                          ref={(el) => {
+                            if (el) todoInputMap.current.set(todo.id, el);
+                            else todoInputMap.current.delete(todo.id);
+                          }}
+                          autoFocus={focusTodoId === todo.id}
+                          type="text"
+                          value={todo.text}
+                          onKeyDown={(e) => handleTodoKeyDown(e, idx)}
+                          onChange={(e) => handleTodoTextChange(todo.id, e.target.value)}
+                          placeholder={`To-do #${idx + 1}...`}
+                          className={`flex-1 min-w-0 bg-transparent text-body-default focus:outline-none ${
+                            todo.done
+                              ? 'line-through text-diary-navy/45'
+                              : 'text-diary-text font-normal'
+                          }`}
+                        />
+                      </div>
 
                       {/* Right-side quick controls: Category tag, Duration pill & Time-Block slot */}
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center justify-end gap-1.5 pl-9 sm:pl-0 shrink-0">
                         {/* Strategic Category Pill (Click to cycle: Strategy -> Sales -> Systems -> Ops -> none) */}
                         <button
                           type="button"
@@ -889,7 +929,9 @@ export const DailyPlannerPage: React.FC = () => {
             </div>
 
             {/* TIME / ACTIVITY SCHEDULE (6 AM to 9 PM, cream headers) */}
-            <div className="diary-card p-4 md:p-6 flex flex-col justify-between">
+            <div className={`diary-card p-4 md:p-6 flex flex-col justify-between ${
+              mobilePlannerView === 'todos' ? 'hidden lg:flex' : 'flex'
+            }`}>
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-diary-navy/10">
                   <h2 className="font-heading text-card-title text-diary-navy font-semibold truncate">

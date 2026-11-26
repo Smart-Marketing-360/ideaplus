@@ -85,13 +85,16 @@ export const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-diary-navy/40 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-diary-navy/40 backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="w-full max-w-lg bg-white rounded-xl shadow-2xl border border-diary-navy/20 overflow-hidden animate-in zoom-in-95 duration-150"
+        className="w-full max-w-lg bg-white rounded-t-2xl sm:rounded-xl shadow-2xl border border-diary-navy/20 overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-150 max-h-[90dvh] overflow-y-auto"
+        style={{
+          paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Editorial & Crisp */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-white">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-200 bg-white">
           <div>
             <h2 className="font-heading text-card-title text-diary-navy font-semibold tracking-tight">
               Quick Task Entry
@@ -103,15 +106,15 @@ export const QuickCaptureModal: React.FC<QuickCaptureModalProps> = ({ isOpen, on
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-diary-navy hover:bg-slate-100 transition-colors"
+            className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg text-slate-400 hover:text-diary-navy hover:bg-slate-100 transition-colors"
             aria-label="Close"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
           {successMsg ? (
             <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center justify-between gap-3 animate-in fade-in">
               <div className="flex items-center gap-2">

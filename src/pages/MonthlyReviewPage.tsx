@@ -267,7 +267,7 @@ export const MonthlyReviewPage: React.FC = () => {
                           {day < 10 ? `0${day}` : day}
                         </span>
                         {[0, 1, 2, 3].map((slotIdx) => (
-                          <div key={slotIdx} className="flex justify-center">
+                          <div key={slotIdx} className="flex justify-center items-center min-h-[36px] min-w-[36px]">
                             <input
                               type="checkbox"
                               checked={Boolean(dayTicks[slotIdx])}

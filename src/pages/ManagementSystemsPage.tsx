@@ -200,107 +200,198 @@ export const ManagementSystemsPage: React.FC = () => {
             <p className="font-heading text-card-title text-diary-navy">Loading systems...</p>
           </div>
         ) : (
-          <div className="diary-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="diary-table">
-                <thead>
-                  <tr>
-                    <th className="w-12 text-center">#</th>
-                    <th className="w-1/3 text-left">Challenge</th>
-                    <th className="w-1/4 text-left">Reason</th>
-                    <th className="w-1/3 text-left">Solution</th>
-                    <th className="w-28 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredItems.length === 0 ? (
+          <>
+            {/* DESKTOP / TABLET TABLE */}
+            <div className="hidden md:block diary-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="diary-table">
+                  <thead>
                     <tr>
-                      <td colSpan={5} className="text-center py-10 text-slate-400 bg-white">
-                        No management items found.
-                      </td>
+                      <th className="w-12 text-center">#</th>
+                      <th className="w-1/3 text-left">Challenge</th>
+                      <th className="w-1/4 text-left">Reason</th>
+                      <th className="w-1/3 text-left">Solution</th>
+                      <th className="w-28 text-center">Status</th>
                     </tr>
-                  ) : (
-                    filteredItems.map((item, idx) => (
-                      <tr key={item.id}>
-                        <td className="text-center font-heading font-semibold text-diary-navy text-caption align-top pt-3">
-                          {idx + 1}
-                        </td>
-
-                        <td className="align-top">
-                          <textarea
-                            rows={3}
-                            value={item.challenge}
-                            onChange={(e) => handleUpdateItem(item.id, { challenge: e.target.value })}
-                            placeholder="What breakdown or friction occurred?..."
-                            className="w-full bg-transparent text-body-medium font-semibold text-diary-text focus:outline-none resize-none"
-                          />
-                        </td>
-
-                        <td className="align-top">
-                          <textarea
-                            rows={3}
-                            value={item.reason}
-                            onChange={(e) => handleUpdateItem(item.id, { reason: e.target.value })}
-                            placeholder="Root cause behind the issue?..."
-                            className="w-full bg-transparent text-body-default text-slate-600 focus:outline-none resize-none"
-                          />
-                        </td>
-
-                        <td className="align-top">
-                          <textarea
-                            rows={3}
-                            value={item.solution}
-                            onChange={(e) => handleUpdateItem(item.id, { solution: e.target.value })}
-                            placeholder="Systemic SOP fix to prevent recurrence..."
-                            className="w-full bg-transparent text-body-default text-diary-text focus:outline-none resize-none"
-                          />
-                        </td>
-
-                        <td className="text-center align-top pt-3 whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => toggleStatus(item.id, item.status)}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-caption font-medium border transition-all ${
-                              item.status === 'Solved'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                                : 'bg-amber-50 text-amber-900 border-amber-200'
-                            }`}
-                            title="Click to toggle status"
-                          >
-                            {item.status === 'Solved' ? (
-                              <>
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Solved</span>
-                              </>
-                            ) : (
-                              <>
-                                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
-                                <span>Open</span>
-                              </>
-                            )}
-                          </button>
+                  </thead>
+                  <tbody>
+                    {filteredItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-10 text-slate-400 bg-white">
+                          No management items found.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredItems.map((item, idx) => (
+                        <tr key={item.id}>
+                          <td className="text-center font-heading font-semibold text-diary-navy text-caption align-top pt-3">
+                            {idx + 1}
+                          </td>
+
+                          <td className="align-top">
+                            <textarea
+                              rows={3}
+                              value={item.challenge}
+                              onChange={(e) => handleUpdateItem(item.id, { challenge: e.target.value })}
+                              placeholder="What breakdown or friction occurred?..."
+                              className="w-full bg-transparent text-body-medium font-semibold text-diary-text focus:outline-none resize-none"
+                            />
+                          </td>
+
+                          <td className="align-top">
+                            <textarea
+                              rows={3}
+                              value={item.reason}
+                              onChange={(e) => handleUpdateItem(item.id, { reason: e.target.value })}
+                              placeholder="Root cause behind the issue?..."
+                              className="w-full bg-transparent text-body-default text-slate-600 focus:outline-none resize-none"
+                            />
+                          </td>
+
+                          <td className="align-top">
+                            <textarea
+                              rows={3}
+                              value={item.solution}
+                              onChange={(e) => handleUpdateItem(item.id, { solution: e.target.value })}
+                              placeholder="Systemic SOP fix to prevent recurrence..."
+                              className="w-full bg-transparent text-body-default text-diary-text focus:outline-none resize-none"
+                            />
+                          </td>
+
+                          <td className="text-center align-top pt-3 whitespace-nowrap">
+                            <button
+                              type="button"
+                              onClick={() => toggleStatus(item.id, item.status)}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-caption font-medium border transition-all ${
+                                item.status === 'Solved'
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                  : 'bg-amber-50 text-amber-900 border-amber-200'
+                              }`}
+                              title="Click to toggle status"
+                            >
+                              {item.status === 'Solved' ? (
+                                <>
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span>Solved</span>
+                                </>
+                              ) : (
+                                <>
+                                  <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                                  <span>Open</span>
+                                </>
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-caption text-slate-500">
+                  {items.filter((i) => i.status === 'Open').length} open challenge(s) requiring systemic solution.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleAddRow}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg text-caption font-medium transition-colors min-h-[36px]"
+                >
+                  <Plus className="w-3.5 h-3.5 text-diary-gold" />
+                  <span>Add row</span>
+                </button>
+              </div>
             </div>
 
-            <div className="p-4 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-caption text-slate-500">
-                {items.filter((i) => i.status === 'Open').length} open challenge(s) requiring systemic solution.
-              </span>
+            {/* MOBILE STACKED CARDS (below 768px) */}
+            <div className="md:hidden space-y-4">
+              {filteredItems.length === 0 ? (
+                <div className="diary-card p-6 text-center text-slate-400">
+                  No management items found.
+                </div>
+              ) : (
+                filteredItems.map((item, idx) => (
+                  <div key={item.id} className="diary-card p-4 space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-diary-navy/10">
+                      <span className="font-heading font-semibold text-card-title text-diary-navy">
+                        Challenge #{idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleStatus(item.id, item.status)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-caption font-bold border transition-all ${
+                          item.status === 'Solved'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'bg-amber-50 text-amber-900 border-amber-200'
+                        }`}
+                      >
+                        {item.status === 'Solved' ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Solved</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Open</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="text-tag font-semibold uppercase text-diary-navy/70 block mb-1">
+                        Challenge / Breakdown
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={item.challenge}
+                        onChange={(e) => handleUpdateItem(item.id, { challenge: e.target.value })}
+                        placeholder="What breakdown occurred?..."
+                        className="w-full p-2.5 bg-diary-cream-light/40 rounded-lg border border-diary-navy/20 text-body-medium font-semibold text-diary-text focus:outline-none focus:bg-white resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-tag font-semibold uppercase text-diary-navy/70 block mb-1">
+                        Root cause
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={item.reason}
+                        onChange={(e) => handleUpdateItem(item.id, { reason: e.target.value })}
+                        placeholder="Root cause behind the issue?..."
+                        className="w-full p-2 bg-diary-cream-light/30 rounded-lg border border-diary-navy/20 text-body-default text-slate-700 focus:outline-none focus:bg-white resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-tag font-semibold uppercase text-diary-navy/70 block mb-1">
+                        Systemic solution (SOP)
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={item.solution}
+                        onChange={(e) => handleUpdateItem(item.id, { solution: e.target.value })}
+                        placeholder="Systemic SOP fix to prevent recurrence..."
+                        className="w-full p-2 bg-diary-cream-light/30 rounded-lg border border-diary-navy/20 text-body-default text-diary-text focus:outline-none focus:bg-white resize-none"
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+
               <button
                 type="button"
                 onClick={handleAddRow}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg text-caption font-medium transition-colors min-h-[36px]"
+                className="w-full py-3 bg-diary-navy hover:bg-diary-navy-dark text-white rounded-lg font-heading font-semibold text-body-medium flex items-center justify-center gap-2 shadow-xs active:scale-95"
               >
-                <Plus className="w-3.5 h-3.5 text-diary-gold" />
-                <span>Add row</span>
+                <Plus className="w-4 h-4 text-diary-gold" />
+                <span>Add challenge row</span>
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
     </DiaryPageFrame>

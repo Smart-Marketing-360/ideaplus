@@ -120,7 +120,14 @@ export const MobileNav: React.FC = () => {
       )}
 
       {/* Sticky Bottom Tab Bar (5 Tabs, 44px+ tap targets) - Deep Navy with Gold highlights */}
-      <nav className="no-print md:hidden fixed bottom-0 left-0 right-0 h-16 bg-diary-navy text-white border-t border-diary-navy-dark shadow-2xl z-40 px-2 flex items-center justify-around">
+      <nav
+        className="no-print md:hidden fixed bottom-0 left-0 right-0 bg-diary-navy text-white border-t border-diary-navy-dark/60 shadow-2xl z-40 px-2 flex items-center justify-around"
+        style={{
+          paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))',
+          paddingTop: '0.375rem',
+          minHeight: 'calc(3.75rem + env(safe-area-inset-bottom, 0px))'
+        }}
+      >
         {primaryTabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -129,7 +136,7 @@ export const MobileNav: React.FC = () => {
               to={tab.path}
               end={tab.path === '/'}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 px-2 rounded-lg transition-colors ${
+                `flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 px-2 rounded-lg transition-colors active:scale-95 ${
                   isActive
                     ? 'text-diary-gold font-semibold'
                     : 'text-white/70 hover:text-white'
@@ -146,7 +153,7 @@ export const MobileNav: React.FC = () => {
         <button
           type="button"
           onClick={() => setDrawerOpen(!drawerOpen)}
-          className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 px-2 rounded-lg transition-colors ${
+          className={`flex flex-col items-center justify-center min-w-[56px] min-h-[44px] py-1 px-2 rounded-lg transition-colors active:scale-95 ${
             drawerOpen ? 'text-diary-gold font-semibold' : 'text-white/70 hover:text-white'
           }`}
           aria-label="More menu"

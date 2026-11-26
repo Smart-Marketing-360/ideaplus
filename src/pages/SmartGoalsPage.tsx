@@ -510,7 +510,8 @@ export const SmartGoalsPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="overflow-x-auto rounded-lg border border-diary-navy/20">
+                {/* DESKTOP TABLE VIEW */}
+                <div className="hidden md:block overflow-x-auto rounded-lg border border-diary-navy/20">
                   <table className="diary-table">
                     <thead>
                       <tr>
@@ -572,6 +573,74 @@ export const SmartGoalsPage: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* MOBILE STACKED CARDS VIEW (<md) */}
+                <div className="md:hidden space-y-3">
+                  {activeSteps.map((step, idx) => (
+                    <div
+                      key={step.id}
+                      className="p-3 bg-diary-cream-light/40 rounded-xl border border-diary-navy/15 space-y-2 shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-heading font-bold text-diary-navy text-caption px-2 py-0.5 bg-diary-cream rounded border border-diary-navy/15">
+                          Step #{idx + 1}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStep(step.id, { done: !step.done })}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-caption font-semibold border bg-white border-diary-navy/20 min-h-[36px]"
+                        >
+                          {step.done ? (
+                            <>
+                              <CheckSquare className="w-4 h-4 text-emerald-600" />
+                              <span className="text-emerald-700 font-bold">Done</span>
+                            </>
+                          ) : (
+                            <>
+                              <Square className="w-4 h-4 text-diary-navy/40" />
+                              <span className="text-diary-navy/60">Pending</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+
+                      <input
+                        type="text"
+                        value={step.description}
+                        onChange={(e) => handleUpdateStep(step.id, { description: e.target.value })}
+                        placeholder={`Step #${idx + 1} description...`}
+                        className={`w-full p-2.5 bg-white rounded-lg border border-diary-navy/20 text-body-medium focus:outline-none focus:ring-1 focus:ring-diary-navy min-h-[44px] ${
+                          step.done ? 'line-through text-diary-navy/40' : 'text-diary-text'
+                        }`}
+                      />
+
+                      <div className="grid grid-cols-2 gap-2 text-caption">
+                        <div>
+                          <label className="text-tag uppercase text-diary-navy/60 font-semibold block mb-0.5">
+                            Start Date
+                          </label>
+                          <input
+                            type="date"
+                            value={step.start_date || ''}
+                            onChange={(e) => handleUpdateStep(step.id, { start_date: e.target.value })}
+                            className="w-full p-1.5 bg-white rounded border border-diary-navy/20 text-caption text-diary-navy min-h-[36px]"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-tag uppercase text-diary-navy/60 font-semibold block mb-0.5">
+                            Finish Date
+                          </label>
+                          <input
+                            type="date"
+                            value={step.finish_date || ''}
+                            onChange={(e) => handleUpdateStep(step.id, { finish_date: e.target.value })}
+                            className="w-full p-1.5 bg-white rounded border border-diary-navy/20 text-caption text-diary-navy min-h-[36px]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
